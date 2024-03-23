@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.linkedProjects": [
+        ".\\wasm-bhtsne\\Cargo.toml",
+        ".\\wasm-bhtsne\\Cargo.toml"
+    ]
+}
