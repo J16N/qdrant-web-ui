@@ -47,6 +47,12 @@ impl tSNEf32 {
             .barnes_hut(theta, DistanceFunctions::Euclidean.get_closure::<f32>());
         self.0.embedding()
     }
+
+    pub fn exact(&mut self) -> Vec<f32> {
+        self.0
+            .exact(DistanceFunctions::Euclidean.get_closure::<f32>());
+        self.0.embedding()
+    }
 }
 
 #[wasm_bindgen]
@@ -76,6 +82,12 @@ impl tSNEf64 {
     pub fn barnes_hut(&mut self, theta: f64) -> Vec<f64> {
         self.0
             .barnes_hut(theta, DistanceFunctions::Euclidean.get_closure::<f64>());
+        self.0.embedding()
+    }
+
+    pub fn exact(&mut self) -> Vec<f64> {
+        self.0
+            .exact(DistanceFunctions::Euclidean.get_closure::<f64>());
         self.0.embedding()
     }
 }
