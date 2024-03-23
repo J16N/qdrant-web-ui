@@ -234,6 +234,11 @@ const VisualizeChart = ({ scrollResult }) => {
       }
     };
 
+    // Error handling for worker
+    worker.onerror = e => {
+      console.log(e);
+    }
+
     if (scrollResult.data.result?.points?.length > 0) {
       worker.postMessage(scrollResult.data);
     }
