@@ -11,6 +11,34 @@ import { bigIntJSON } from '../../common/bigIntJSON';
 
 const SCORE_GRADIENT_COLORS = ['#EB5353', '#F9D923', '#36AE7C'];
 
+const WASM_SUPPORTED = (() => {
+  try {
+    if (typeof WebAssembly === "object" &&
+      typeof WebAssembly.instantiate === "function") {
+      const module = new WebAssembly.Module(
+        Uint8Array.of(
+          0x0, 0x61, 0x73, 0x6d,
+          0x01, 0x00, 0x00, 0x00
+        )
+      );
+      if (module instanceof WebAssembly.Module)
+        return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+    }
+  }
+  catch (e) {
+    console.log(e);
+  }
+  return false;
+})();
+
+// if (wasmSupported()) {
+//   WASM_SUPPORTED = true;
+//   console.log('WebAssembly supported');
+//   await init();
+//   await initThreadPool(navigator.hardwareConcurrency);
+//   greet(new Array(25).fill(0), 2);
+// }
+
 const VisualizeChart = ({ scrollResult }) => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [openViewPoints, setOpenViewPoints] = useState(false);
@@ -175,9 +203,20 @@ const VisualizeChart = ({ scrollResult }) => {
       ],
     });
 
-    const worker = new Worker(new URL('./worker.js', import.meta.url), {
-      type: 'module',
-    });
+    let worker;
+
+    if (WASM_SUPPORTED) {
+      console.log('WebAssembly supported');
+      worker = new Worker(new URL('./wasmWorker.js', import.meta.url), {
+        type: 'module',
+      });
+    }
+    else {
+      console.log('WebAssembly not supported');
+      worker = new Worker(new URL('./worker.js', import.meta.url), {
+        type: 'module',
+      });
+    }
 
     worker.onmessage = (m) => {
       if (m.data.error) {
