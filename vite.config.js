@@ -2,7 +2,24 @@ import { defineConfig } from 'vite';
 import reactRefresh from '@vitejs/plugin-react';
 import svgrPlugin from 'vite-plugin-svgr';
 import eslintPlugin from 'vite-plugin-eslint';
-import {rehypeMetaAsAttributes} from "./src/lib/rehype-meta-as-attributes";
+import path from 'path';
+import { rehypeMetaAsAttributes } from "./src/lib/rehype-meta-as-attributes";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
+
+// this is required for wasm
+const viteServerConfig = {
+  name: "log-request-middleware",
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET");
+      res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+      res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+      next();
+    });
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => {
@@ -16,6 +33,9 @@ export default defineConfig(async () => {
       outDir: 'dist',
     },
     plugins: [
+      viteServerConfig,
+      wasm(),
+      topLevelAwait(),
       reactRefresh(),
       svgrPlugin({
         svgrOptions: {
@@ -42,5 +62,10 @@ export default defineConfig(async () => {
       environment: 'jsdom',
       setupFiles: ['./src/setupTests.js'],
     },
+    resolve: {
+      alias: {
+        "wasm-bhtsne": path.resolve(__dirname, "./wasm-bhtsne/pkg")
+      }
+    }
   }
 });
