@@ -1,6 +1,6 @@
 {
   "name": "qdrant-web-ui",
-  "version": "0.1.22",
+  "version": "0.1.28",
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
@@ -25,10 +25,11 @@
     "@uppy/react": "^3.1.2",
     "@uppy/xhr-upload": "^3.3.1",
     "@vitejs/plugin-react": "^4.0.0",
-    "autocomplete-openapi": "^0.1.1",
+    "autocomplete-openapi": "0.1.4",
     "axios": "^1.6.7",
     "chart.js": "^4.3.0",
     "chroma-js": "^2.4.2",
+    "jose": "^5.2.3",
     "jsonc-parser": "^3.2.0",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.44.0",
@@ -40,6 +41,7 @@
     "prismjs": "^1.29.0",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
+    "react-diff-viewer-continued": "^3.4.0",
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^0.0.51",
     "react-router-dom": "^6.8.1",
