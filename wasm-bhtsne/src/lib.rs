@@ -1,93 +1,108 @@
-mod algorithm;
-mod distance;
-pub mod tsne;
+mod hyperparameters;
+mod tsne;
 mod utils;
 
-// #[cfg(test)]
-// mod test;
+use crate::hyperparameters::Hyperparameters;
+use crate::utils::set_panic_hook;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::JsValue;
 
-use algorithm::tSNE;
-use distance::DistanceFunctions;
-use wasm_bindgen::prelude::*;
+mod algorithm;
+#[cfg(test)]
+mod test;
+use crate::algorithm::tsne_encoder;
+
+#[cfg(feature = "parallel")]
 pub use wasm_bindgen_rayon::init_thread_pool;
 
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
+/// t-distributed stochastic neighbor embedding. Provides a parallel implementation of both the
+/// exact version of the algorithm and the tree accelerated one leveraging space partitioning trees.
+#[wasm_bindgen]
+#[allow(non_camel_case_types)]
+pub struct bhtSNEf32 {
+    tsne_encoder: tsne_encoder<f32>,
+}
+
+#[wasm_bindgen]
+impl bhtSNEf32 {
+    #[wasm_bindgen(constructor)]
+    pub fn new(data: JsValue, opt: JsValue) -> Self {
+        set_panic_hook();
+        let converted_data: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(data).unwrap();
+        let hyperparameters: Hyperparameters<f32> = serde_wasm_bindgen::from_value(opt).unwrap();
+
+        let mut tsne = tsne_encoder::new(converted_data, hyperparameters);
+
+        tsne.barnes_hut_data(|sample_a, sample_b| {
+            sample_a
+                .iter()
+                .zip(sample_b.iter())
+                .map(|(a, b)| (a - b).powi(2))
+                .sum::<f32>()
+                .sqrt()
+        });
+        Self { tsne_encoder: tsne }
+    }
+
+    /// Performs a parallel Barnes-Hut approximation of the t-SNE algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// `epochs` - the maximum number of fitting iterations. Must be positive
+    pub fn step(&mut self, epochs: usize) -> Result<JsValue, JsValue> {
+        self.tsne_encoder.run(epochs);
+
+        let embeddings: Vec<f32> = self.tsne_encoder.embeddings();
+        let samples: Vec<Vec<f32>> = embeddings
+            .chunks(self.tsne_encoder.no_dims)
+            .map(|chunk| chunk.to_vec())
+            .collect();
+
+        Ok(serde_wasm_bindgen::to_value(&samples)?)
     }
 }
 
 #[wasm_bindgen]
 #[allow(non_camel_case_types)]
-pub struct tSNEf32(tSNE<f32, f32>);
-
-#[wasm_bindgen]
-impl tSNEf32 {
-    pub fn new(data: &[f32], col: usize) -> Self {
-        utils::set_panic_hook();
-        let data = data.chunks(col).map(|x| x.to_vec()).collect();
-        tSNEf32(tSNE::new(data))
-    }
-
-    pub fn embedding_dim(&mut self, dim: u8) {
-        self.0.embedding_dim(dim);
-    }
-
-    pub fn epochs(&mut self, epochs: usize) {
-        self.0.epochs(epochs);
-    }
-
-    pub fn perplexity(&mut self, perplexity: f32) {
-        self.0.perplexity(perplexity);
-    }
-
-    pub fn barnes_hut(&mut self, theta: f32) -> Vec<f32> {
-        self.0
-            .barnes_hut(theta, DistanceFunctions::Euclidean.get_closure::<f32>());
-        self.0.embedding()
-    }
-
-    pub fn exact(&mut self) -> Vec<f32> {
-        self.0
-            .exact(DistanceFunctions::Euclidean.get_closure::<f32>());
-        self.0.embedding()
-    }
+pub struct bhtSNEf64 {
+    tsne_encoder: tsne_encoder<f64>,
 }
 
 #[wasm_bindgen]
-#[allow(non_camel_case_types)]
-pub struct tSNEf64(tSNE<f64, f64>);
+impl bhtSNEf64 {
+    #[wasm_bindgen(constructor)]
+    pub fn new(data: JsValue, opt: JsValue) -> Self {
+        set_panic_hook();
+        let converted_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
+        let hyperparameters: Hyperparameters<f64> = serde_wasm_bindgen::from_value(opt).unwrap();
 
-#[wasm_bindgen]
-impl tSNEf64 {
-    pub fn new(data: &[f64], col: usize) -> Self {
-        utils::set_panic_hook();
-        let data = data.chunks(col).map(|x| x.to_vec()).collect();
-        tSNEf64(tSNE::new(data))
+        let mut tsne = tsne_encoder::new(converted_data, hyperparameters);
+
+        tsne.barnes_hut_data(|sample_a, sample_b| {
+            sample_a
+                .iter()
+                .zip(sample_b.iter())
+                .map(|(a, b)| (a - b).powi(2))
+                .sum::<f64>()
+                .sqrt()
+        });
+        Self { tsne_encoder: tsne }
     }
 
-    pub fn embedding_dim(&mut self, dim: u8) {
-        self.0.embedding_dim(dim);
-    }
+    /// Performs a parallel Barnes-Hut approximation of the t-SNE algorithm.
+    ///
+    /// # Arguments
+    ///
+    /// `epochs` - Sets epochs, the maximum number of fitting iterations.
+    pub fn step(&mut self, epochs: usize) -> Result<JsValue, JsValue> {
+        self.tsne_encoder.run(epochs);
 
-    pub fn epochs(&mut self, epochs: usize) {
-        self.0.epochs(epochs);
-    }
+        let embeddings: Vec<f64> = self.tsne_encoder.embeddings();
+        let samples: Vec<Vec<f64>> = embeddings
+            .chunks(self.tsne_encoder.no_dims)
+            .map(|chunk| chunk.to_vec())
+            .collect();
 
-    pub fn perplexity(&mut self, perplexity: f64) {
-        self.0.perplexity(perplexity);
-    }
-
-    pub fn barnes_hut(&mut self, theta: f64) -> Vec<f64> {
-        self.0
-            .barnes_hut(theta, DistanceFunctions::Euclidean.get_closure::<f64>());
-        self.0.embedding()
-    }
-
-    pub fn exact(&mut self) -> Vec<f64> {
-        self.0
-            .exact(DistanceFunctions::Euclidean.get_closure::<f64>());
-        self.0.embedding()
+        Ok(serde_wasm_bindgen::to_value(&samples)?)
     }
 }

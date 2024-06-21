@@ -74,12 +74,12 @@ impl<'a, T: Float> VPTreeBuilder<'a, T> {
 }
 
 /// Vantage Point tree.
-pub(crate) struct VPTree<'a, T: Float + Send + Sync, U: Float> {
-    items: Vec<(usize, &'a [U])>,
+pub(crate) struct VPTree<'a, T: Float + Send + Sync, U> {
+    items: Vec<(usize, &'a U)>,
     pub(crate) root: Option<Box<Node<T>>>,
 }
 
-impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
+impl<'a, T: Float + Send + Sync, U> VPTree<'a, T, U> {
     /// Constructor for the `VPTree` struct.
     ///
     /// # Arguments
@@ -87,18 +87,14 @@ impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
     /// * `items` - **original** items to build the tree on.
     ///
     /// * `metric_f` - metric function.
-    pub fn new<F>(items: &'a [&[U]], metric_f: F) -> Self
+    pub fn new<F>(items: &'a [U], metric_f: F) -> Self
     where
-        F: Fn(&[U], &[U]) -> T,
+        F: Fn(&U, &U) -> T,
     {
-        let mut items_vec: Vec<(usize, &[U])> = vec![];
-        for (i, &item) in items.iter().enumerate() {
-            items_vec.push((i, item));
-        }
         let mut tree = VPTree {
             // Need to swap some references around, don't want to move original data.
             // Also need to keep track of the original position, as it will differ.
-            items: items_vec,
+            items: items.iter().enumerate().collect(),
             root: None,
         };
         let n_samples = tree.items.len(); // Immutable borrow must be kept outside.
@@ -115,12 +111,7 @@ impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
     /// * `upper` - upper bound.
     ///
     /// * `metric_f` - metric function.
-    fn build_from_points<F: Fn(&[U], &[U]) -> T>(
-        &mut self,
-        lower: usize,
-        upper: usize,
-        metric_f: F,
-    ) {
+    fn build_from_points<F: Fn(&U, &U) -> T>(&mut self, lower: usize, upper: usize, metric_f: F) {
         let mut stack = vec![VPTreeBuilder::new(&mut self.root, lower, upper)];
         let mut thread_rng = rand::thread_rng();
 
@@ -144,7 +135,7 @@ impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
                     let median: usize = (upper + lower) / 2;
                     self.items[lower + 1..upper].select_nth_unstable_by(
                         median - lower - 1,
-                        &mut |a: &(usize, &[U]), b: &(usize, &[U])| {
+                        &mut |a: &(usize, &U), b: &(usize, &U)| {
                             if metric_f(to_cmp, a.1) < metric_f(to_cmp, b.1) {
                                 Ordering::Less
                             } else if metric_f(to_cmp, a.1) == metric_f(to_cmp, b.1) {
@@ -166,10 +157,10 @@ impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
     }
 
     /// Auxiliary function that searches for the k nearest neighbors of an item.
-    fn look_up<F: Fn(&[U], &[U]) -> T>(
+    fn look_up<F: Fn(&U, &U) -> T>(
         &self,
         tau: &mut T, //Tracks the distances to the farthest point in the results.
-        target: &[U],
+        target: &U,
         k: usize,
         heap: &mut BinaryHeap<HeapItem<T>>,
         metric_f: F,
@@ -246,14 +237,14 @@ impl<'a, T: Float + Send + Sync, U: Float> VPTree<'a, T, U> {
     /// * `metric_f` - metric function.
     pub fn search<F>(
         &self,
-        target: &[U],
+        target: &U,
         target_index: usize,
         k: usize,
         neighbors_indices: &mut [super::Aligned<usize>],
         distances: &mut [super::Aligned<T>],
         metric_f: F,
     ) where
-        F: Fn(&[U], &[U]) -> T,
+        F: Fn(&U, &U) -> T,
     {
         debug_assert_eq!(neighbors_indices.len(), distances.len());
 
