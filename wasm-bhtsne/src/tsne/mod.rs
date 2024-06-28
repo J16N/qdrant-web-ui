@@ -480,14 +480,14 @@ pub(super) fn zero_mean<T>(
 ///
 /// * `embedding_dim` - dimensionality of the embedding space.
 #[allow(dead_code)]
-pub(crate) fn evaluate_error<T: Float + Send + Sync>(
+pub(crate) fn evaluate_error<T>(
     p_values: &[Aligned<T>],
     y: &[Aligned<T>],
     n_samples: &usize,
     embedding_dim: &usize,
 ) -> T
 where
-    T: Float + AddAssign + Add + DivAssign + Sum,
+    T: Float + AddAssign + Add + DivAssign + Sum + Send + Sync,
 {
     let mut distances: Vec<Aligned<T>> = vec![T::zero().into(); n_samples * n_samples];
     compute_pairwise_distance_matrix(
@@ -542,7 +542,7 @@ where
 ///
 /// * `theta` - threshold for the Barnes-Hut algorithm.
 #[allow(dead_code)]
-pub(crate) fn evaluate_error_approximately<T: Float + Send + Sync + Sum>(
+pub(crate) fn evaluate_error_approximately<T>(
     p_rows: &[usize],
     p_columns: &[usize],
     p_values: &[Aligned<T>],
@@ -552,7 +552,7 @@ pub(crate) fn evaluate_error_approximately<T: Float + Send + Sync + Sum>(
     theta: &T,
 ) -> T
 where
-    T: Float + AddAssign + SubAssign + MulAssign + DivAssign,
+    T: Float + AddAssign + SubAssign + MulAssign + DivAssign + Sum + Send + Sync,
 {
     // Get estimate of normalization term.
     let q_sum = {
