@@ -72,8 +72,12 @@ fn barnes_hut_tsne() {
     };
 
     let opt_js: JsValue = serde_wasm_bindgen::to_value(&opt).unwrap();
+    let mut tsne: bhtSNEf32;
 
-    let mut tsne: bhtSNEf32 = bhtSNEf32::new(data_js, opt_js);
+    match bhtSNEf32::new(data_js, opt_js) {
+        Ok(t) => tsne = t,
+        Err(e) => panic!("Error: {:?}", e),
+    }
 
     for _x in 0..1000 {
         tsne.step(1).unwrap();
