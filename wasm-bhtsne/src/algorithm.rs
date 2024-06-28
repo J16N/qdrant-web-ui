@@ -10,7 +10,6 @@ use rayon::{
     slice::{ParallelSlice, ParallelSliceMut},
 };
 use std::{
-    fmt::Result,
     iter::Sum,
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
