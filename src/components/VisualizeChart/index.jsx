@@ -61,15 +61,17 @@ const VisualizeChart = ({ scrollResult }) => {
     }
 
     if (scrollResult.error) {
-      enqueueSnackbar(`Visualization Unsuccessful, error: ${bigIntJSON.stringify(scrollResult.error)}`, {
+      enqueueSnackbar(`Visualization Unsuccessful\nError: ${bigIntJSON.stringify(scrollResult.error)}`, {
         variant: 'error',
+        style: { whiteSpace: 'pre-line' },
         action,
       });
-
       return;
-    } else if (!scrollResult.data?.result?.points.length) {
-      enqueueSnackbar(`Visualization Unsuccessful, error: No data returned`, {
+    }
+    else if (!scrollResult.data?.result?.points.length) {
+      enqueueSnackbar(`Visualization Unsuccessful\nError: No data returned`, {
         variant: 'error',
+        style: { whiteSpace: 'pre-line' },
         action,
       });
       return;
@@ -83,8 +85,9 @@ const VisualizeChart = ({ scrollResult }) => {
       labelby = colorBy.payload;
       // Color and label by payload field
       if (get(scrollResult.data.result?.points[0]?.payload, labelby) === undefined) {
-        enqueueSnackbar(`Visualization Unsuccessful, error: Color by field ${labelby} does not exist`, {
+        enqueueSnackbar(`Visualization Unsuccessful\nError: Color by field ${labelby} does not exist`, {
           variant: 'error',
+          style: { whiteSpace: 'pre-line' },
           action,
         });
         return;
@@ -222,17 +225,24 @@ const VisualizeChart = ({ scrollResult }) => {
 
     worker.onmessage = (m) => {
       if (m.data.error) {
-        enqueueSnackbar(`Visualization Unsuccessful, error: ${m.data.error}`, {
+        enqueueSnackbar(`Visualization Unsuccessful\nError: ${m.data.error}`, {
           variant: 'error',
+          style: { whiteSpace: 'pre-line' },
           action,
         });
-      } else if (m.data.result && m.data.result.length > 0) {
+      }
+      else if (m.data.result && m.data.result.length > 0) {
         m.data.result.forEach((dataset, index) => {
           myChart.data.datasets[index].data = dataset.data;
         });
         myChart.update();
-      } else {
-        enqueueSnackbar(`Visualization Unsuccessful, error: Unexpected Error Occured`, { variant: 'error', action });
+      }
+      else {
+        enqueueSnackbar(`Visualization Unsuccessful\nError: Unexpected Error Occured`, {
+          variant: 'error',
+          style: { whiteSpace: 'pre-line' },
+          action
+        });
       }
     };
 

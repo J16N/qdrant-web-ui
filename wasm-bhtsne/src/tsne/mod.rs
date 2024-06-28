@@ -16,6 +16,7 @@ use std::{
     ops::{Add, AddAssign, DivAssign, MulAssign, SubAssign},
 };
 pub(crate) use vptree::VPTree;
+use wasm_bindgen::JsValue;
 
 /// Cache aligned floating point number. It's used to prevent false sharing.
 #[repr(align(64))]
@@ -43,10 +44,17 @@ unsafe impl<T: Send + Sync + Copy> Sync for Aligned<T> {}
 /// # Panics
 ///
 /// If the perplexity is too large.
-pub(super) fn check_perplexity<T: Float + AsPrimitive<usize>>(perplexity: &T, n_samples: &usize) {
+pub(super) fn check_perplexity<T: Float + AsPrimitive<usize>>(
+    perplexity: &T,
+    n_samples: &usize,
+) -> Result<(), JsValue> {
     if n_samples - 1 < 3 * perplexity.as_() {
-        panic!("error: the provided perplexity is too large for the number of data points.\n");
+        return Err(JsValue::from(
+            "The provided perplexity is too large for the number of data points.",
+        ));
+        // panic!("error: the provided perplexity is too large for the number of data points.\n");
     }
+    Ok(())
 }
 
 /// Prepares the buffers necessary to the computation. Allocates memory freed by `clear_buffers`.

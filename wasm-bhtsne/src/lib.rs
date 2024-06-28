@@ -26,7 +26,7 @@ pub struct bhtSNEf32 {
 #[wasm_bindgen]
 impl bhtSNEf32 {
     #[wasm_bindgen(constructor)]
-    pub fn new(data: JsValue, opt: JsValue) -> Self {
+    pub fn new(data: JsValue, opt: JsValue) -> Result<bhtSNEf32, JsValue> {
         set_panic_hook();
         let converted_data: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(data).unwrap();
         let hyperparameters: Hyperparameters<f32> = serde_wasm_bindgen::from_value(opt).unwrap();
@@ -40,8 +40,9 @@ impl bhtSNEf32 {
                 .map(|(a, b)| (a - b).powi(2))
                 .sum::<f32>()
                 .sqrt()
-        });
-        Self { tsne_encoder: tsne }
+        })?;
+
+        Ok(Self { tsne_encoder: tsne })
     }
 
     /// Performs a parallel Barnes-Hut approximation of the t-SNE algorithm.
@@ -71,7 +72,7 @@ pub struct bhtSNEf64 {
 #[wasm_bindgen]
 impl bhtSNEf64 {
     #[wasm_bindgen(constructor)]
-    pub fn new(data: JsValue, opt: JsValue) -> Self {
+    pub fn new(data: JsValue, opt: JsValue) -> Result<bhtSNEf64, JsValue> {
         set_panic_hook();
         let converted_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
         let hyperparameters: Hyperparameters<f64> = serde_wasm_bindgen::from_value(opt).unwrap();
@@ -85,8 +86,9 @@ impl bhtSNEf64 {
                 .map(|(a, b)| (a - b).powi(2))
                 .sum::<f64>()
                 .sqrt()
-        });
-        Self { tsne_encoder: tsne }
+        })?;
+
+        Ok(Self { tsne_encoder: tsne })
     }
 
     /// Performs a parallel Barnes-Hut approximation of the t-SNE algorithm.

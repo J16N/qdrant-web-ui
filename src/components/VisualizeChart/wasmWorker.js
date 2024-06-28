@@ -91,28 +91,35 @@ self.onmessage = e => {
                 perplexity: 30.0,
                 theta: 0.6,
             };
-            const tsneEncoder = new bhtSNEf64(data, opt);
-            let result;
-            for (let i = 0; i < 1000; i++) {
-                result = tsneEncoder.step(1);
+            try {
+                const tsneEncoder = new bhtSNEf64(data, opt);
+                let result;
+                for (let i = 0; i < 1000; i++) {
+                    result = tsneEncoder.step(1);
 
-                if (Date.now() - lastTime < MESSAGE_INTERVAL) {
-                    continue;
+                    if (Date.now() - lastTime < MESSAGE_INTERVAL) {
+                        continue;
+                    }
+
+                    lastTime = Date.now();
+                    self.postMessage({
+                        result: getDataset(e.data, result, 2),
+                        error: null,
+                    });
                 }
+                // const tsne = tSNEf32.new(data, cols);
+                // tsne.perplexity(1.0);
+                // tsne.epochs(500);
 
-                lastTime = Date.now();
+                // const result = tsne.barnes_hut(0.5);
+                // console.log(data);
+                // console.log(result);
+            } catch (error) {
                 self.postMessage({
-                    result: getDataset(e.data, result, 2),
-                    error: null,
+                    data: [],
+                    error: error,
                 });
             }
-            // const tsne = tSNEf32.new(data, cols);
-            // tsne.perplexity(1.0);
-            // tsne.epochs(500);
-
-            // const result = tsne.barnes_hut(0.5);
-            // console.log(data);
-            // console.log(result);
         })();
     }
 }

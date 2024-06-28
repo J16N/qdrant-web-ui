@@ -10,9 +10,11 @@ use rayon::{
     slice::{ParallelSlice, ParallelSliceMut},
 };
 use std::{
+    fmt::Result,
     iter::Sum,
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
+use wasm_bindgen::JsValue;
 
 struct TsneBuilder<'data, U>
 where
@@ -132,7 +134,10 @@ where
     ///
     /// **Do note that** `metric_f` **must be a metric distance**, i.e. it must
     /// satisfy the [triangle inequality](https://en.wikipedia.org/wiki/Triangle_inequality).
-    pub fn barnes_hut_data<F: Fn(&&[T], &&[T]) -> T + Send + Sync>(&mut self, metric_f: F) {
+    pub fn barnes_hut_data<F: Fn(&&[T], &&[T]) -> T + Send + Sync>(
+        &mut self,
+        metric_f: F,
+    ) -> std::result::Result<(), JsValue> {
         let samples: Vec<&[T]> = self.data.chunks(self.d).collect::<Vec<&[T]>>();
         let tsne_builder = TsneBuilder::new(&samples);
 
@@ -140,7 +145,7 @@ where
         self.n_samples = tsne_builder.data.len(); // Number of samples in data.
 
         // Checks that the supplied perplexity is suitable for the number of samples at hand.
-        tsne::check_perplexity(&self.perplexity, &self.n_samples);
+        tsne::check_perplexity(&self.perplexity, &self.n_samples)?;
 
         let embedding_dim = self.embedding_dim;
         // Number of  points ot consider when approximating the conditional distribution P.
@@ -231,6 +236,8 @@ where
         // to make the solution zero mean.
         self.means = vec![T::zero(); embedding_dim];
         self.epochs = 0;
+
+        Ok(())
     }
 
     // Main Training loop.
