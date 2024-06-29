@@ -134,7 +134,7 @@ self.onmessage = e => {
 }
 
 self.onerror = e => {
-    console.log(e);
+    console.error(e);
 }
 
 function getDataset(data, reducedPoint, cols) {

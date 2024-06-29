@@ -255,7 +255,7 @@ const VisualizeChart = ({ scrollResult }) => {
 
     // Error handling for worker
     worker.onerror = e => {
-      console.log(e);
+      console.error(e);
     }
 
     if (scrollResult.data.result?.points?.length > 0) {
