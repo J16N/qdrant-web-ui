@@ -80,14 +80,17 @@ fn barnes_hut_tsne() {
     }
 
     for _x in 0..1000 {
-        tsne.step(1).unwrap();
+        tsne.step(1);
     }
-    let embedding_js = tsne.step(1).unwrap();
-    let embedding_rs: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(embedding_js).unwrap();
-    let flattened_array: Vec<f32> = embedding_rs
-        .into_par_iter()
-        .flat_map(|inner_vec| inner_vec.into_par_iter())
-        .collect();
+    let embedding_js = tsne.step(1);
+    // let embedding_rs: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(embedding_js).unwrap();
+    // let flattened_array: Vec<f32> = embedding_rs
+    //     .into_par_iter()
+    //     .flat_map(|inner_vec| inner_vec.into_par_iter())
+    //     .collect();
+    let length = samples.len() * NO_DIMS as usize;
+    let flattened_array: Vec<f32> =
+        unsafe { Vec::from_raw_parts(embedding_js as *mut f32, length, length) };
     let points: Vec<_> = flattened_array.chunks(NO_DIMS as usize).collect();
 
     assert_eq!(points.len(), samples.len());
