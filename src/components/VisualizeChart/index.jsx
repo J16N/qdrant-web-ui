@@ -79,6 +79,7 @@ const VisualizeChart = ({ scrollResult }) => {
 
     const dataset = [];
     const colorBy = scrollResult.data.color_by;
+    const channel = new MessageChannel();
 
     let labelby = null;
     if (colorBy?.payload) {
@@ -203,6 +204,12 @@ const VisualizeChart = ({ scrollResult }) => {
             }
           },
         },
+        {
+          id: 'AfterUpdate',
+          afterRender: () => {
+            channel.port1.postMessage(false);
+          }
+        }
       ],
     });
 
@@ -252,7 +259,8 @@ const VisualizeChart = ({ scrollResult }) => {
     }
 
     if (scrollResult.data.result?.points?.length > 0) {
-      worker.postMessage(scrollResult.data);
+      worker.postMessage({ command: "CONN" }, [channel.port2]);
+      worker.postMessage({ command: "FWD", details: scrollResult.data });
     }
 
     return () => {

@@ -12,11 +12,21 @@ const errorMessage = {
 };
 
 const MESSAGE_INTERVAL = 200;
+let port;
+let RENDERING = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 self.onmessage = e => {
-    let lastTime = new Date().getTime();
+    if (e.data.command === "CONN") {
+        port = e.ports[0];
+        port.onmessage = event => {
+            RENDERING = event.data;
+        };
+        return;
+    }
+    // let lastTime = new Date().getTime();
     const data = [];
-    const points = e.data?.result?.points;
+    const points = e.data.details.result?.points;
     let vector;
     let vecName;
     let cols = 0;
@@ -91,30 +101,31 @@ self.onmessage = e => {
                 perplexity: 30.0,
                 theta: 0.6,
             };
+
             try {
                 const tsneEncoder = new bhtSNEf64(data, opt);
                 let result;
                 for (let i = 0; i < 1000; i++) {
                     result = tsneEncoder.step(1);
 
-                    if (Date.now() - lastTime < MESSAGE_INTERVAL) {
-                        continue;
-                    }
+                    // if (Date.now() - lastTime < MESSAGE_INTERVAL) {
+                    //     continue;
+                    // }
 
-                    lastTime = Date.now();
+                    // Give chance to other incoming messages
+                    await sleep(0);
+
+                    if (RENDERING) continue;
+
+                    // lastTime = Date.now();
                     self.postMessage({
-                        result: getDataset(e.data, result, 2),
+                        result: getDataset(e.data.details, result, 2),
                         error: null,
                     });
+                    RENDERING = true;
                 }
-                // const tsne = tSNEf32.new(data, cols);
-                // tsne.perplexity(1.0);
-                // tsne.epochs(500);
-
-                // const result = tsne.barnes_hut(0.5);
-                // console.log(data);
-                // console.log(result);
-            } catch (error) {
+            }
+            catch (error) {
                 self.postMessage({
                     data: [],
                     error: error,
