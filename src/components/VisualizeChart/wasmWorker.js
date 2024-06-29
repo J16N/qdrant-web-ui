@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-unused-vars */
 /* eslint-disable new-cap */
+/* eslint-disable prefer-const */
 
 import get from 'lodash/get';
 import init, { initThreadPool, bhtSNEf64 } from 'wasm-bhtsne';
@@ -30,6 +31,7 @@ self.onmessage = e => {
     let vector;
     let vecName;
     let cols = 0;
+    let outputDim = 2;
 
     if (points?.length === 0) {
         self.postMessage(errorMessage);
@@ -80,7 +82,7 @@ self.onmessage = e => {
     if (data.length) {
         // Perform t-SNE
         (async () => {
-            await init();
+            const { memory } = await init();
             if (await threads()) {
                 console.log("Browser supports threads");
                 await initThreadPool(navigator.hardwareConcurrency);
@@ -104,24 +106,20 @@ self.onmessage = e => {
 
             try {
                 const tsneEncoder = new bhtSNEf64(data, opt);
-                let result;
                 for (let i = 0; i < 1000; i++) {
-                    result = tsneEncoder.step(1);
-
-                    // if (Date.now() - lastTime < MESSAGE_INTERVAL) {
-                    //     continue;
-                    // }
+                    const resultPtr = tsneEncoder.step(1);
 
                     // Give chance to other incoming messages
                     await sleep(0);
 
                     if (RENDERING) continue;
 
-                    // lastTime = Date.now();
+                    const result = new Float64Array(memory.buffer, resultPtr, points.length * outputDim);
                     self.postMessage({
-                        result: getDataset(e.data.details, result, 2),
+                        result: getDataset(e.data.details, result, outputDim),
                         error: null,
                     });
+
                     RENDERING = true;
                 }
             }
@@ -153,16 +151,16 @@ function getDataset(data, reducedPoint, cols) {
         })
         points?.forEach((point, idx) => {
             const label = get(point.payload, labelBy);
-            // dataset[data.labelByArrayUnique.indexOf(label)].data.push({
-            //     x: reducedPoint[idx * cols + 0],
-            //     y: reducedPoint[idx * cols + 1],
-            //     point: point,
-            // })
             dataset[data.labelByArrayUnique.indexOf(label)].data.push({
-                x: reducedPoint[idx][0],
-                y: reducedPoint[idx][1],
-                point,
+                x: reducedPoint[idx * cols + 0],
+                y: reducedPoint[idx * cols + 1],
+                point: point,
             })
+            // dataset[data.labelByArrayUnique.indexOf(label)].data.push({
+            //     x: reducedPoint[idx][0],
+            //     y: reducedPoint[idx][1],
+            //     point,
+            // })
         })
     }
     else {
@@ -171,16 +169,16 @@ function getDataset(data, reducedPoint, cols) {
             data: [],
         })
         points?.forEach((point, idx) => {
-            // dataset[0].data.push({
-            //     x: reducedPoint[idx * cols + 0],
-            //     y: reducedPoint[idx * cols + 1],
-            //     point,
-            // })
             dataset[0].data.push({
-                x: reducedPoint[idx][0],
-                y: reducedPoint[idx][1],
+                x: reducedPoint[idx * cols + 0],
+                y: reducedPoint[idx * cols + 1],
                 point,
             })
+            // dataset[0].data.push({
+            //     x: reducedPoint[idx][0],
+            //     y: reducedPoint[idx][1],
+            //     point,
+            // })
         })
     }
 
