@@ -50,16 +50,17 @@ impl bhtSNEf32 {
     /// # Arguments
     ///
     /// `epochs` - the maximum number of fitting iterations. Must be positive
-    pub fn step(&mut self, epochs: usize) -> Result<JsValue, JsValue> {
+    pub fn step(&mut self, epochs: usize) -> *const f32 {
         self.tsne_encoder.run(epochs);
 
-        let embeddings: Vec<f32> = self.tsne_encoder.embeddings();
-        let samples: Vec<Vec<f32>> = embeddings
-            .chunks(self.tsne_encoder.no_dims)
-            .map(|chunk| chunk.to_vec())
-            .collect();
+        // let embeddings: Vec<f32> = self.tsne_encoder.embeddings();
+        // let samples: Vec<Vec<f32>> = embeddings
+        //     .chunks(self.tsne_encoder.no_dims)
+        //     .map(|chunk| chunk.to_vec())
+        //     .collect();
 
-        Ok(serde_wasm_bindgen::to_value(&samples)?)
+        // Ok(serde_wasm_bindgen::to_value(&samples)?)
+        self.tsne_encoder.embeddings().as_ptr()
     }
 }
 
@@ -96,15 +97,16 @@ impl bhtSNEf64 {
     /// # Arguments
     ///
     /// `epochs` - Sets epochs, the maximum number of fitting iterations.
-    pub fn step(&mut self, epochs: usize) -> Result<JsValue, JsValue> {
+    pub fn step(&mut self, epochs: usize) -> *const f64 {
         self.tsne_encoder.run(epochs);
 
-        let embeddings: Vec<f64> = self.tsne_encoder.embeddings();
-        let samples: Vec<Vec<f64>> = embeddings
-            .chunks(self.tsne_encoder.no_dims)
-            .map(|chunk| chunk.to_vec())
-            .collect();
+        // let embeddings: Vec<f64> = self.tsne_encoder.embeddings();
+        // let samples: Vec<Vec<f64>> = embeddings
+        //     .chunks(self.tsne_encoder.no_dims)
+        //     .map(|chunk| chunk.to_vec())
+        //     .collect();
 
-        Ok(serde_wasm_bindgen::to_value(&samples)?)
+        // Ok(serde_wasm_bindgen::to_value(&samples)?)
+        self.tsne_encoder.embeddings().as_ptr()
     }
 }
