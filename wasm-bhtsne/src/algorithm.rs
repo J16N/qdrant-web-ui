@@ -75,13 +75,15 @@ where
         + MulAssign
         + SubAssign,
 {
-    pub fn new(data: Vec<Vec<T>>, hyperparameters: Hyperparameters<T>) -> Self {
-        let d: usize = data[0].len();
+    pub fn new(data: &[T], d: usize, hyperparameters: Hyperparameters<T>) -> Self {
+        // let d: usize = data[0].len();
 
-        let flattened_array: Vec<T> = data
-            .into_par_iter()
-            .flat_map(|inner_vec| inner_vec.into_par_iter())
-            .collect();
+        // let flattened_array: Vec<T> = data
+        //     .into_par_iter()
+        //     .flat_map(|inner_vec| inner_vec.into_par_iter())
+        //     .collect();
+
+        let flattened_array: Vec<T> = data.to_vec();
 
         assert!(
             hyperparameters.theta > T::from(0.0).unwrap(),

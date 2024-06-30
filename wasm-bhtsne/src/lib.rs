@@ -26,12 +26,12 @@ pub struct bhtSNEf32 {
 #[wasm_bindgen]
 impl bhtSNEf32 {
     #[wasm_bindgen(constructor)]
-    pub fn new(data: JsValue, opt: JsValue) -> Result<bhtSNEf32, JsValue> {
+    pub fn new(data: &[f32], cols: usize, opt: JsValue) -> Result<bhtSNEf32, JsValue> {
         set_panic_hook();
-        let converted_data: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(data).unwrap();
+        // let converted_data: Vec<Vec<f32>> = serde_wasm_bindgen::from_value(data).unwrap();
         let hyperparameters: Hyperparameters<f32> = serde_wasm_bindgen::from_value(opt).unwrap();
 
-        let mut tsne = tsne_encoder::new(converted_data, hyperparameters);
+        let mut tsne = tsne_encoder::new(data, cols, hyperparameters);
 
         tsne.barnes_hut_data(|sample_a, sample_b| {
             sample_a
@@ -73,12 +73,12 @@ pub struct bhtSNEf64 {
 #[wasm_bindgen]
 impl bhtSNEf64 {
     #[wasm_bindgen(constructor)]
-    pub fn new(data: JsValue, opt: JsValue) -> Result<bhtSNEf64, JsValue> {
+    pub fn new(data: &[f64], cols: usize, opt: JsValue) -> Result<bhtSNEf64, JsValue> {
         set_panic_hook();
-        let converted_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
+        // let converted_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
         let hyperparameters: Hyperparameters<f64> = serde_wasm_bindgen::from_value(opt).unwrap();
 
-        let mut tsne = tsne_encoder::new(converted_data, hyperparameters);
+        let mut tsne = tsne_encoder::new(data, cols, hyperparameters);
 
         tsne.barnes_hut_data(|sample_a, sample_b| {
             sample_a
