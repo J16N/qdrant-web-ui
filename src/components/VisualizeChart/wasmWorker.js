@@ -3,7 +3,6 @@
 /* eslint-disable new-cap */
 /* eslint-disable prefer-const */
 
-import get from 'lodash/get';
 import init, { initThreadPool, bhtSNEf64 } from 'wasm-bhtsne';
 import { threads } from 'wasm-feature-detect';
 
