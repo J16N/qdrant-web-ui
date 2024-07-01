@@ -60,7 +60,7 @@ impl bhtSNEf32 {
         //     .collect();
 
         // Ok(serde_wasm_bindgen::to_value(&samples)?)
-        self.tsne_encoder.embeddings().as_ptr()
+        self.tsne_encoder.embeddings()
     }
 }
 
@@ -107,6 +107,6 @@ impl bhtSNEf64 {
         //     .collect();
 
         // Ok(serde_wasm_bindgen::to_value(&samples)?)
-        self.tsne_encoder.embeddings().as_ptr()
+        self.tsne_encoder.embeddings()
     }
 }

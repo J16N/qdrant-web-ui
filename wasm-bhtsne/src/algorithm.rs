@@ -61,6 +61,7 @@ where
     q_sums: Vec<tsne::Aligned<T>>,
     means: Vec<T>,
     n_samples: usize,
+    embeddings: Vec<T>,
 }
 
 impl<T> tsne_encoder<T>
@@ -117,6 +118,7 @@ where
             q_sums: Vec::new(),
             means: Vec::new(),
             n_samples: 0,
+            embeddings: Vec::new(),
         }
     }
 
@@ -149,7 +151,7 @@ where
         tsne::check_perplexity(&self.perplexity, &self.n_samples)?;
 
         let embedding_dim = self.embedding_dim;
-        // Number of  points ot consider when approximating the conditional distribution P.
+        // Number of points to consider when approximating the conditional distribution P.
         let n_neighbors: usize = (T::from(3.0).unwrap() * self.perplexity).as_();
         // NUmber of entries in gradient and gains matrices.
         let grad_entries = self.n_samples * embedding_dim;
@@ -340,7 +342,8 @@ where
         }
     }
 
-    pub fn embeddings(&mut self) -> Vec<T> {
-        self.y.iter().map(|x| x.0).collect()
+    pub fn embeddings(&mut self) -> *const T {
+        self.embeddings = self.y.iter().map(|x| x.0).collect();
+        self.embeddings.as_ptr()
     }
 }
