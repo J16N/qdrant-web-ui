@@ -58,7 +58,7 @@ fn barnes_hut_tsne() {
         6.3, 2.5, 5., 1.9, 6.5, 3., 5.2, 2., 6.2, 3.4, 5.4, 2.3, 5.9, 3., 5.1, 1.8,
     ];
     let samples: Vec<Vec<f32>> = data.chunks(D).map(|chunk| chunk.to_vec()).collect();
-    let data_js: JsValue = serde_wasm_bindgen::to_value(&samples).unwrap();
+    // let data_js: JsValue = serde_wasm_bindgen::to_value(&samples).unwrap();
 
     let opt: Hyperparameters<f32> = Hyperparameters {
         learning_rate: 200.0,
@@ -74,7 +74,7 @@ fn barnes_hut_tsne() {
     let opt_js: JsValue = serde_wasm_bindgen::to_value(&opt).unwrap();
     let mut tsne: bhtSNEf32;
 
-    match bhtSNEf32::new(data_js, opt_js) {
+    match bhtSNEf32::new(&data, D, opt_js) {
         Ok(t) => tsne = t,
         Err(e) => panic!("Error: {:?}", e),
     }
