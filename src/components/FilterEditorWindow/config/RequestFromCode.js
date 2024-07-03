@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
+
 import axios from 'axios';
 import { bigIntJSON } from '../../../common/bigIntJSON';
+import isEmpty from 'lodash/isEmpty';
 
 export async function requestFromCode(text, collectionName) {
   const data = codeParse(text);
@@ -26,11 +29,23 @@ async function actionFromCode(collectionName, data, action) {
     });
     response.data.color_by = data.reqBody.color_by;
     response.data.vector_name = data.reqBody.vector_name;
-    response.data.result.points = response.data.result.points.filter((point) => Object.keys(point.vector).length > 0);
+    response.data.result.points = response.data.result.points.filter((point) => !isEmpty(point.vector));
     return {
       data: response.data,
       error: null,
     };
+    // let response = await fetch(`http://localhost:6333/collections/${collectionName}/points/${action || 'scroll'}`, {
+    //   method: 'POST',
+    //   body: JSON.stringify(data.reqBody),
+    // });
+    // response = await response.json();
+    // response.color_by = data.reqBody.color_by;
+    // response.vector_name = data.reqBody.vector_name;
+    // response.result.points = response.result.points.filter((point) => !isEmpty(point.vector));
+    // return {
+    //   data: response,
+    //   error: null,
+    // };
   } catch (err) {
     return {
       data: null,
