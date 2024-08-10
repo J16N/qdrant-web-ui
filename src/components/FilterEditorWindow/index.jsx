@@ -8,6 +8,7 @@ import { autocomplete } from './config/Autocomplete';
 import { requestFromCode } from './config/RequestFromCode';
 import './editor.css';
 import EditorCommon from '../EditorCommon';
+import { myChart } from '../VisualizeChart';
 
 const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
   const editorRef = useRef(null);
@@ -37,7 +38,12 @@ const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
       0,
       async (_ctx, ...args) => {
         const data = args[0];
+        if (myChart) {
+          myChart.destroy();
+        }
+        console.time("Request from code");
         const result = await requestFromCode(data, collectionName);
+        console.timeEnd("Request from code");
         onChangeResult(result);
       },
       ''

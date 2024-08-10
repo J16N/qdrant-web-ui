@@ -12,6 +12,8 @@ import { imageTooltip } from './ImageTooltip';
 import { bigIntJSON } from '../../common/bigIntJSON';
 
 const SCORE_GRADIENT_COLORS = ['#EB5353', '#F9D923', '#36AE7C'];
+const labelIdxDict = {};
+export let myChart = null;
 
 function prepareDataset(data) {
     const dataset = [];
@@ -23,27 +25,32 @@ function prepareDataset(data) {
             dataset.push({
                 label: label,
                 data: [],
-            })
-        })
+            });
+        });
         points?.forEach((point) => {
             const label = get(point.payload, labelBy);
-            dataset[data.labelByArrayUnique.indexOf(label)].data.push({
+            // if (!has(labelIdxDict, label)) {
+            //     labelIdxDict[label] = data.labelByArrayUnique.indexOf(label);
+            // }
+            const labelIdx = get(labelIdxDict, label, data.labelByArrayUnique.indexOf(label));
+            dataset[labelIdx].data.push({
                 x: 0,
                 y: 0,
-                point: point,
-            })
+                point,
+            });
+            labelIdxDict[label] = labelIdx;
             // dataset[data.labelByArrayUnique.indexOf(label)].data.push({
             //     x: reducedPoint[idx][0],
             //     y: reducedPoint[idx][1],
             //     point,
             // })
-        })
+        });
     }
     else {
         dataset.push({
             label: 'data',
             data: [],
-        })
+        });
         points?.forEach((point) => {
             dataset[0].data.push({
                 x: 0,
@@ -55,46 +62,37 @@ function prepareDataset(data) {
             //     y: reducedPoint[idx][1],
             //     point,
             // })
-        })
+        });
     }
 
     return dataset;
 }
 
-function mutateDataset(dataset, reducedPoint, cols) {
-    for (let i = 0; i < reducedPoint.length / cols; ++i) {
-        dataset[0].data[i].x = reducedPoint[i * cols];
-        dataset[0].data[i].y = reducedPoint[i * cols + 1];
+function mutateDataset(actualDataset, resultDataset, reducedPoint, cols) {
+    const labelBy = actualDataset.color_by?.payload;
+    const points = actualDataset.result?.points;
+
+    if (labelBy) {
+        const labelDataDict = {};
+        points?.forEach((point, idx) => {
+            const label = get(point.payload, labelBy);
+            const labelDataIdx = get(labelDataDict, label, 0);
+
+            resultDataset[labelIdxDict[label]]
+                .data[labelDataIdx].x = reducedPoint[idx * cols];
+            resultDataset[labelIdxDict[label]]
+                .data[labelDataIdx].y = reducedPoint[idx * cols + 1];
+
+            labelDataDict[label] = labelDataIdx + 1;
+        });
+    }
+    else {
+        for (let i = 0; i < reducedPoint.length / cols; ++i) {
+            resultDataset[0].data[i].x = reducedPoint[i * cols];
+            resultDataset[0].data[i].y = reducedPoint[i * cols + 1];
+        }
     }
 }
-
-// const WASM_SUPPORTED = (() => {
-//   try {
-//     if (typeof WebAssembly === "object" &&
-//       typeof WebAssembly.instantiate === "function") {
-//       const module = new WebAssembly.Module(
-//         Uint8Array.of(
-//           0x0, 0x61, 0x73, 0x6d,
-//           0x01, 0x00, 0x00, 0x00
-//         )
-//       );
-//       if (module instanceof WebAssembly.Module)
-//         return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-//     }
-//   }
-//   catch (e) {
-//     console.log(e);
-//   }
-//   return false;
-// })();
-
-// if (wasmSupported()) {
-//   WASM_SUPPORTED = true;
-//   console.log('WebAssembly supported');
-//   await init();
-//   await initThreadPool(navigator.hardwareConcurrency);
-//   greet(new Array(25).fill(0), 2);
-// }
 
 const VisualizeChart = ({ scrollResult }) => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -194,7 +192,7 @@ const VisualizeChart = ({ scrollResult }) => {
             });
         }
         const ctx = document.getElementById('myChart');
-        const myChart = new Chart(ctx, {
+        myChart = new Chart(ctx, {
             type: 'scatter',
             data: {
                 datasets: dataset,
@@ -274,18 +272,9 @@ const VisualizeChart = ({ scrollResult }) => {
             type: 'module',
         });
 
-        // if ((async () => await threads())()) {
-        //   console.log('WebAssembly supported');
-        //   worker = new Worker(new URL('./wasmWorker.js', import.meta.url), {
+        // const worker = new Worker(new URL('./tsneWorker.js', import.meta.url), {
         //     type: 'module',
-        //   });
-        // }
-        // else {
-        //   console.log('WebAssembly not supported');
-        //   worker = new Worker(new URL('./worker.js', import.meta.url), {
-        //     type: 'module',
-        //   });
-        // }
+        // });
 
         let sharedArray;
         let typedArray;
@@ -301,7 +290,7 @@ const VisualizeChart = ({ scrollResult }) => {
                 });
             }
             else if (m.data.error === null) {  // m.data.result && m.data.result.length > 0) {
-                mutateDataset(resultDataset, typedArray, outputDim);
+                mutateDataset(scrollResult.data, resultDataset, typedArray, outputDim);
                 resultDataset.forEach((dataset, index) => {
                     myChart.data.datasets[index].data = dataset.data;
                 });
@@ -337,7 +326,7 @@ const VisualizeChart = ({ scrollResult }) => {
         }
 
         return () => {
-            myChart.destroy();
+            // myChart.destroy();
             worker.terminate();
             channel.port1.close();
             channel.port2.close();
