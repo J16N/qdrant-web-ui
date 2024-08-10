@@ -69,8 +69,10 @@ export default function Notifications() {
   React.useEffect(() => {
     setLoading(true);
     fetchNotifications().then((data) => {
-      setIssuesCount(data.length);
-      setIssues(data);
+      if (data) {
+        setIssuesCount(data.length);
+        setIssues(data);
+      }
       setLoading(false);
     });
   }, []);
@@ -210,15 +212,15 @@ function Notification({ issue }) {
       sx={
         result
           ? {
-              background: 'rgba(0, 255, 0, 0.1)',
-              borderColor: 'rgba(0, 255, 0, 0.5) !important',
-            }
+            background: 'rgba(0, 255, 0, 0.1)',
+            borderColor: 'rgba(0, 255, 0, 0.5) !important',
+          }
           : error
-          ? {
+            ? {
               background: 'rgba(255, 0, 0, 0.1)',
               borderColor: 'rgba(255, 0, 0, 0.5) !important',
             }
-          : null
+            : null
       }
     >
       {loading ? (
