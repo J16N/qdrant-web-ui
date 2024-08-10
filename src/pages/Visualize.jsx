@@ -9,7 +9,6 @@ import VisualizeChart from '../components/VisualizeChart';
 import { useWindowResize } from '../hooks/windowHooks';
 
 const query = `
-
 // Specify request parameters to select data for visualization.
 //
 // Available parameters:
@@ -48,8 +47,6 @@ const query = `
 {
   "limit": 500
 }
-
-
 `;
 const defaultResult = {};
 
