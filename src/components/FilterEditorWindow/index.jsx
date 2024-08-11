@@ -41,9 +41,7 @@ const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
         if (myChart) {
           myChart.destroy();
         }
-        console.time("Request from code");
         const result = await requestFromCode(data, collectionName);
-        console.timeEnd("Request from code");
         onChangeResult(result);
       },
       ''
