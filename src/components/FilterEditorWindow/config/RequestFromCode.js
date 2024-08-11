@@ -34,18 +34,6 @@ async function actionFromCode(collectionName, data, action) {
       data: response.data,
       error: null,
     };
-    // let response = await fetch(`http://localhost:6333/collections/${collectionName}/points/${action || 'scroll'}`, {
-    //   method: 'POST',
-    //   body: JSON.stringify(data.reqBody),
-    // });
-    // response = await response.json();
-    // response.color_by = data.reqBody.color_by;
-    // response.vector_name = data.reqBody.vector_name;
-    // response.result.points = response.result.points.filter((point) => !isEmpty(point.vector));
-    // return {
-    //   data: response,
-    //   error: null,
-    // };
   } catch (err) {
     return {
       data: null,
