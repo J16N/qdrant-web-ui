@@ -1,10 +1,7 @@
-/* eslint-disable no-restricted-globals */
 /* eslint-disable no-unused-vars */
-/* eslint-disable new-cap */
-/* eslint-disable prefer-const */
-
-import init, { initThreadPool, Tsne } from 'wasm_bhtsne';
+import init, { initThreadPool, DistbhtSNEf64 } from 'wasm-dist-bhtsne';
 import { threads } from 'wasm-feature-detect';
+import exampleData from 'examples/data';
 
 const errorMessage = {
     data: [],
@@ -30,7 +27,7 @@ self.onmessage = e => {
     let vector;
     let vecName;
     let cols = 0;
-    let outputDim = 2;
+    const outputDim = 2;
     const sharedArray = new Float64Array(e.data.sharedArray);
 
     if (points?.length === 0) {
@@ -44,7 +41,6 @@ self.onmessage = e => {
     else if (typeof (vector = points[0].vector).length === 'number') {
         cols = vector.length;
         points.forEach(point => data.push(...point.vector));
-        // points.forEach(point => data.push(point.vector));
     }
     else if (typeof vector === 'object') {
         if (!(vecName = e.data.vector_name)) {
@@ -71,7 +67,6 @@ self.onmessage = e => {
 
         cols = vector[vecName].length;
         points.forEach(point => data.push(...point.vector[vecName]));
-        // points.forEach(point => data.push(point.vector[vecName]));
     }
     else {
         errorMessage.error = 'Unexpected Error Occurred';
@@ -95,32 +90,41 @@ self.onmessage = e => {
             const opt = {
                 learning_rate: 150.0,
                 perplexity: 30.0,
-                theta: 1.5,
+                theta: 0.5,
             };
 
             try {
-                console.time('Rust rewrite - t-SNE Total Time');
-                console.time('Rust rewrite - t-SNE 1st step');
-                const tsne = new Tsne(data, cols);
-                console.timeEnd('Rust rewrite - t-SNE 1st step');
-
-                console.time('Rust rewrite - t-SNE 2nd step');
-                for (let i = 0; i < 500; i++) {
-                    tsne.step();
+                console.time('Rust Bhtsne - t-SNE Total Time');
+                console.time('Rust Bhtsne - t-SNE 1st step');
+                const tsneEncoder = new DistbhtSNEf64(
+                    exampleData.distances,
+                    exampleData.indices,
+                    exampleData.n_samples,
+                    exampleData.n_neighbors,
+                    opt
+                );
+                console.timeEnd('Rust Bhtsne - t-SNE 1st step');
+                let resultPtr;
+                console.time('Rust Bhtsne - t-SNE 2nd step');
+                for (let i = 0; i < 1000; i++) {
+                    tsneEncoder.step(1);
 
                     // Give chance to other coroutines to run
                     await sleep(0);
 
+                    // Check if rendering is in progress
+                    // If yes, then don't send the result
                     if (RENDERING) continue;
-                    sendVisual(self, sharedArray, tsne, memory, points, outputDim);
+
+                    resultPtr = tsneEncoder.get_embedding();
+                    sendVisual(self, sharedArray, resultPtr, memory, points, outputDim);
                     RENDERING = true;
                 }
-                console.timeEnd('Rust rewrite - t-SNE 2nd step');
-                sendVisual(self, sharedArray, tsne, memory, points, outputDim);
-                console.timeEnd('Rust rewrite - t-SNE Total Time');
+                console.timeEnd('Rust Bhtsne - t-SNE 2nd step');
+                sendVisual(self, sharedArray, resultPtr, memory, points, outputDim);
+                console.timeEnd('Rust Bhtsne - t-SNE Total Time');
             }
             catch (error) {
-                console.error(error);
                 self.postMessage({
                     data: [],
                     error: error,
@@ -134,8 +138,7 @@ self.onerror = e => {
     console.error(e);
 };
 
-function sendVisual(worker, sharedArray, tsne, memory, points, outputDim) {
-    let resultPtr = tsne.embedding();
+function sendVisual(worker, sharedArray, resultPtr, memory, points, outputDim) {
     const result = new Float64Array(memory.buffer, resultPtr, points.length * outputDim);
     result.forEach((val, idx) => {
         sharedArray[idx] = val;
