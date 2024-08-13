@@ -54,7 +54,7 @@ self.onmessage = e => {
                 exampleData.distances,
                 exampleData.indices,
                 exampleData.n_samples,
-                exampleData.n_neighbors,
+                exampleData.n_neighbors, // make sure that n_neighbors is 3 times of perplexity
                 opt
             );
             console.timeEnd('Rust Bhtsne - t-SNE 1st step');
