@@ -1,6 +1,4 @@
 {
-    "rust-analyzer.linkedProjects": [
-        ".\\wasm_dist_bhtsne\\Cargo.toml",
-    ],
+    "rust-analyzer.linkedProjects": [],
     "rust-analyzer.procMacro.attributes.enable": true,
 }

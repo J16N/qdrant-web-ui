@@ -67,7 +67,6 @@ export default defineConfig(async () => {
     },
     resolve: {
       alias: {
-        "wasm_dist_bhtsne": path.resolve(__dirname, "./wasm_dist_bhtsne/pkg"),
         "examples": path.resolve(__dirname, "./examples"),
       }
     }
