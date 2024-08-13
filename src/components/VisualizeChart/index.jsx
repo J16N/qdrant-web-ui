@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 import { Button } from '@mui/material';
 import Chart from 'chart.js/auto';
 import chroma from 'chroma-js';
@@ -29,9 +27,6 @@ function prepareDataset(data) {
         });
         points?.forEach((point) => {
             const label = get(point.payload, labelBy);
-            // if (!has(labelIdxDict, label)) {
-            //     labelIdxDict[label] = data.labelByArrayUnique.indexOf(label);
-            // }
             const labelIdx = get(labelIdxDict, label, data.labelByArrayUnique.indexOf(label));
             dataset[labelIdx].data.push({
                 x: 0,
@@ -39,11 +34,6 @@ function prepareDataset(data) {
                 point,
             });
             labelIdxDict[label] = labelIdx;
-            // dataset[data.labelByArrayUnique.indexOf(label)].data.push({
-            //     x: reducedPoint[idx][0],
-            //     y: reducedPoint[idx][1],
-            //     point,
-            // })
         });
     }
     else {
@@ -56,12 +46,7 @@ function prepareDataset(data) {
                 x: 0,
                 y: 0,
                 point,
-            })
-            // dataset[0].data.push({
-            //     x: reducedPoint[idx][0],
-            //     y: reducedPoint[idx][1],
-            //     point,
-            // })
+            });
         });
     }
 
@@ -198,6 +183,7 @@ const VisualizeChart = ({ scrollResult }) => {
                 datasets: dataset,
             },
             options: {
+                animation: false,
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
@@ -268,13 +254,13 @@ const VisualizeChart = ({ scrollResult }) => {
             ],
         });
 
-        const worker = new Worker(new URL('./wasmWorker.js', import.meta.url), {
-            type: 'module',
-        });
-
-        // const worker = new Worker(new URL('./tsneWorker.js', import.meta.url), {
+        // const worker = new Worker(new URL('./worker.js', import.meta.url), {
         //     type: 'module',
         // });
+
+        const worker = new Worker(new URL('./tsneWorker.js', import.meta.url), {
+            type: 'module',
+        });
 
         let sharedArray;
         let typedArray;
@@ -288,8 +274,9 @@ const VisualizeChart = ({ scrollResult }) => {
                     style: { whiteSpace: 'pre-line' },
                     action,
                 });
+                console.error(m.data.error);
             }
-            else if (m.data.error === null) {  // m.data.result && m.data.result.length > 0) {
+            else if (m.data.error === null) {
                 mutateDataset(scrollResult.data, resultDataset, typedArray, outputDim);
                 resultDataset.forEach((dataset, index) => {
                     myChart.data.datasets[index].data = dataset.data;
@@ -308,6 +295,7 @@ const VisualizeChart = ({ scrollResult }) => {
         // Error handling for worker
         worker.onerror = e => {
             console.error(e);
+            myChart.destroy();
         }
 
         if (scrollResult.data.result?.points?.length > 0) {
@@ -326,7 +314,7 @@ const VisualizeChart = ({ scrollResult }) => {
         }
 
         return () => {
-            // myChart.destroy();
+            myChart.destroy();
             worker.terminate();
             channel.port1.close();
             channel.port2.close();
