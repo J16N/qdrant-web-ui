@@ -69,10 +69,8 @@ export default function Notifications() {
   React.useEffect(() => {
     setLoading(true);
     fetchNotifications().then((data) => {
-      if (data) {
-        setIssuesCount(data.length);
-        setIssues(data);
-      }
+      setIssuesCount(data.length);
+      setIssues(data);
       setLoading(false);
     });
   }, []);

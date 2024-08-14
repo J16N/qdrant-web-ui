@@ -5,17 +5,17 @@ import { useParams } from 'react-router-dom';
 import { useClient } from '../../context/client-context';
 import { useTheme } from '@mui/material/styles';
 import { autocomplete } from './config/Autocomplete';
-import { requestFromCode } from './config/RequestFromCode';
+import { useSnackbar } from 'notistack';
+import { codeParse } from './config/RequestFromCode';
 import './editor.css';
 import EditorCommon from '../EditorCommon';
-import { myChart } from '../VisualizeChart';
 
-const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
+const CodeEditorWindow = ({ onChange, code, onChangeResult, customRequestSchema, customHeight = null }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const editorRef = useRef(null);
   const lensesRef = useRef(null);
   const autocompleteRef = useRef(null);
   const { collectionName } = useParams();
-
   const { client: qdrantClient } = useClient();
 
   let runBtnCommandId = null;
@@ -30,6 +30,17 @@ const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
     []
   );
 
+  function onRun(codeText) {
+    const data = codeParse(codeText);
+    if (data.error) {
+      enqueueSnackbar(`Visualization Unsuccessful, error: ${JSON.stringify(data.error)}`, {
+        variant: 'error',
+      });
+      return data;
+    }
+    onChangeResult(data, collectionName);
+  }
+
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     let decorations = [];
@@ -37,12 +48,7 @@ const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
     runBtnCommandId = editor.addCommand(
       0,
       async (_ctx, ...args) => {
-        const data = args[0];
-        if (myChart) {
-          myChart.destroy();
-        }
-        const result = await requestFromCode(data, collectionName);
-        onChangeResult(result);
+        onRun(args[0]);
       },
       ''
     );
@@ -78,20 +84,20 @@ const CodeEditorWindow = ({ onChange, code, onChangeResult }) => {
         );
         editor.addCommand(monaco.KeyMod.CtrlCmd + monaco.KeyCode.Enter, async () => {
           const data = selectedCodeBlock.blockText;
-          const result = await requestFromCode(data, collectionName);
-          onChangeResult(result);
+          onRun(data);
         });
       }
     });
   }
   function handleEditorWillMount(monaco) {
-    autocomplete(monaco, qdrantClient, collectionName).then((autocomplete) => {
+    autocomplete(monaco, qdrantClient, collectionName, customRequestSchema).then((autocomplete) => {
       autocompleteRef.current = monaco.languages.registerCompletionItemProvider('custom-language', autocomplete);
     });
   }
 
   return (
     <EditorCommon
+      customHeight={customHeight}
       language={'custom-language'}
       value={code}
       theme={'custom-language-theme'}
@@ -111,5 +117,7 @@ CodeEditorWindow.propTypes = {
   onChange: PropTypes.func.isRequired,
   code: PropTypes.string.isRequired,
   onChangeResult: PropTypes.func.isRequired,
+  customRequestSchema: PropTypes.func.isRequired,
+  customHeight: PropTypes.number,
 };
 export default CodeEditorWindow;
