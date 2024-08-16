@@ -1,6 +1,6 @@
 [package]
 name = "wasm-dist-bhtsne"
-version = "1.0.0"
+version = "1.0.4"
 authors = [
     "J16N",
     "lv291 <baiunco291@proton.me>",
@@ -9,7 +9,14 @@ authors = [
 edition = "2021"
 license = "MIT"
 categories = ["algorithms", "science", "visualization"]
-keywords = ["tsne", "data-visualization", "webassembly", "wasm", "rust"]
+keywords = [
+    "tsne",
+    "data-visualization",
+    "webassembly",
+    "wasm",
+    "rust",
+    "qdrant",
+]
 readme = "README.md"
 
 [lib]
