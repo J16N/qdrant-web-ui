@@ -182,7 +182,7 @@ pub(super) fn search_beta<T>(
 
     debug_assert_eq!(p_values_row.len(), distances_row.len());
 
-    while !found && iteration < 200 {
+    while !found && iteration < 50 {
         // Here the values of a single row are computed.
         p_values_row
             .iter_mut()
